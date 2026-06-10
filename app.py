@@ -1,29 +1,34 @@
+"""
+企业综合信息查询 Agent — Streamlit 入口
+布局：左侧对话列表（深色） + 右侧聊天区（浅色）
+"""
+
 import streamlit as st
+
 from config.settings import DEEPSEEK_API_KEY
 from agent.agent_factory import create_agent
-from ui.sidebar import render_sidebar
+from ui.styles import CUSTOM_CSS
+from ui.conversations import render_conversations
 from ui.chat import render_chat
 
-# 页面配置
+# ── 页面配置 ──
 st.set_page_config(
     page_title="企业综合信息查询助手",
     page_icon="🏢",
     layout="wide",
+    initial_sidebar_state="auto",
 )
 
-st.title("🏢 企业综合信息查询助手")
+# ── 注入全局样式 ──
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
-# 侧边栏
-render_sidebar()
+# ── 左侧：对话列表 ──
+render_conversations()
 
-# 初始化 Session State
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
+# ── 初始化 Agent（只创建一次，缓存在 session_state） ──
 if "agent" not in st.session_state:
     st.session_state.agent = None
 
-# 初始化 Agent
 if st.session_state.agent is None:
     if not DEEPSEEK_API_KEY:
         st.warning("⚠️ 请先在 .env 文件中配置 DEEPSEEK_API_KEY，然后刷新页面。")
@@ -35,5 +40,5 @@ if st.session_state.agent is None:
         st.error(f"Agent 初始化失败: {str(e)}")
         st.stop()
 
-# 对话区域
+# ── 右侧：聊天区域 ──
 render_chat(st.session_state.agent)
