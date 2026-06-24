@@ -1,180 +1,313 @@
-"""全局自定义 CSS 样式，实现 ChatGPT 风格布局。"""
+"""全局自定义 CSS：稳定的 ChatGPT 风格浅色聊天界面。"""
 
 CUSTOM_CSS = """
 <style>
-/* ========== 全局 ========== */
-[data-testid="stAppViewContainer"] {
-    background: #f7f7f8;
+:root {
+    --bg: #ffffff;
+    --surface: #f7f7f8;
+    --surface-hover: #ececf1;
+    --border: #e5e5e5;
+    --text: #0f0f0f;
+    --muted: #6b7280;
+    --sidebar: #171717;
+    --sidebar-hover: #262626;
+    --sidebar-active: #343541;
+    --sidebar-border: #2f2f2f;
+    --accent: #10a37f;
 }
 
-/* ========== 侧边栏 ========== */
+.stApp {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.main .block-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+}
+
+#MainMenu,
+footer,
+.stAppToolbar,
+[data-testid="stDecoration"] {
+    display: none !important;
+}
+
+header[data-testid="stHeader"] {
+    background: transparent !important;
+    height: 0 !important;
+}
+
+[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"] {
+    display: none !important;
+}
+
+/* Sidebar */
+[data-testid="stSidebar"],
+[data-testid="stSidebar"] > div:first-child {
+    background: var(--sidebar) !important;
+}
+
 [data-testid="stSidebar"] {
-    background-color: #202123;
-    min-width: 280px !important;
-    max-width: 280px !important;
-}
-[data-testid="stSidebar"] * {
-    color: #ececf1;
-}
-[data-testid="stSidebar"] hr {
-    border-color: #4d4d4f;
-}
-[data-testid="stSidebar"] button {
-    background-color: transparent !important;
-    border: 1px solid #565869 !important;
-    border-radius: 8px !important;
-    color: #ececf1 !important;
-    padding: 8px 16px !important;
-    width: 100% !important;
-}
-[data-testid="stSidebar"] button:hover {
-    background-color: #2b2c2e !important;
-}
-[data-testid="stSidebar"] button:focus {
-    border-color: transparent !important;
-    box-shadow: none !important;
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
+    border-right: 1px solid var(--sidebar-border) !important;
 }
 
-/* 侧边栏 conversation 条目 */
-.conv-item {
+[data-testid="stSidebar"] > div:first-child {
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
+}
+
+[data-testid="stSidebar"] * {
+    color: #f4f4f5 !important;
+}
+
+.sidebar-title {
+    padding: 10px 4px 16px;
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+}
+
+.history-title {
+    margin: 16px 4px 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--sidebar-border);
+    color: #a1a1aa !important;
+    font-size: 12px;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+}
+
+.sidebar-caption {
+    color: #a1a1aa !important;
+    font-size: 12px;
+    padding: 0 4px 8px;
+}
+
+[data-testid="stSidebar"] .stButton > button {
+    width: 100% !important;
+    min-height: 42px !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 10px !important;
+    color: #f4f4f5 !important;
+    padding: 9px 12px !important;
+    font-size: 14px !important;
+    font-weight: 450 !important;
+    box-shadow: none !important;
+    transition: background 0.15s ease, border-color 0.15s ease !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: var(--sidebar-hover) !important;
+    border-color: var(--sidebar-border) !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:disabled {
+    background: var(--sidebar-active) !important;
+    border-color: #444654 !important;
+    opacity: 1 !important;
+}
+
+[data-testid="stSidebar"] hr {
+    border-color: var(--sidebar-border) !important;
+    margin: 12px 0 !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stExpander"] {
+    border: 1px solid var(--sidebar-border) !important;
+    border-radius: 10px !important;
+    background: #202123 !important;
+}
+
+[data-testid="stSidebar"] .stAlert {
+    background: #202123 !important;
+    border: 1px solid var(--sidebar-border) !important;
+    border-radius: 8px !important;
+}
+
+/* Main chat layout */
+.chat-shell {
+    min-height: 100vh;
+    background: var(--bg);
+}
+
+.chat-topbar {
+    height: 48px;
     display: flex;
     align-items: center;
-    padding: 10px 12px;
-    margin: 2px 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    color: #ececf1;
+    justify-content: center;
+    padding: 0 20px;
+    background: #ffffff;
+}
+
+.chat-title {
+    width: min(100%, 820px);
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 650;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    transition: background 0.15s;
-}
-.conv-item:hover {
-    background-color: #2b2c2e;
-}
-.conv-item.active {
-    background-color: #343541;
 }
 
-/* ========== 主区域 ========== */
-.main > div {
-    max-width: 100% !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+.chat-content {
+    width: min(100%, 820px);
+    margin: 0 auto;
+    padding: 28px 20px 120px;
 }
 
-/* 标题栏 */
-.chat-header {
-    height: 56px;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid #e5e5e5;
-    padding: 0 20px;
-    font-size: 16px;
-    font-weight: 600;
-    color: #202123;
-}
-
-/* 消息区域 */
-[data-testid="stVerticalBlock"] {
-    gap: 0 !important;
-}
-
-/* 空状态 */
 .empty-state {
+    min-height: calc(100vh - 220px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 60vh;
-    color: #8e8ea0;
-    font-size: 18px;
     text-align: center;
 }
-.empty-state .icon {
-    font-size: 48px;
-    margin-bottom: 16px;
+
+.empty-title {
+    font-size: 28px;
+    line-height: 1.25;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
 }
 
-/* ========== 消息气泡 ========== */
-.message-row {
-    display: flex;
-    padding: 12px 16px;
-    gap: 12px;
-}
-.message-row.user {
-    justify-content: flex-end;
-}
-.message-row.assistant {
-    justify-content: flex-start;
-}
-
-.message-bubble {
-    max-width: 70%;
-    padding: 12px 16px;
-    border-radius: 12px;
+.empty-subtitle {
+    color: var(--muted);
     font-size: 15px;
-    line-height: 1.6;
+    margin-bottom: 22px;
+}
+
+.prompt-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    width: min(100%, 620px);
+}
+
+.prompt-card {
+    border: 1px solid #eeeeee;
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: #fbfbfb;
+    color: #6b7280;
+    text-align: left;
+    font-size: 13px;
+}
+
+/* Plain text messages */
+.plain-message {
+    padding: 18px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.plain-message:last-child {
+    border-bottom: none;
+}
+
+.message-label {
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.message-content {
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.75;
     word-break: break-word;
 }
-.message-bubble.user-bubble {
-    background-color: #2563eb;
-    color: #ffffff;
-    border-bottom-right-radius: 4px;
-}
-.message-bubble.assistant-bubble {
-    background-color: #ffffff;
-    color: #202123;
-    border: 1px solid #e5e5e5;
-    border-bottom-left-radius: 4px;
+
+.user-message .message-content {
+    background: #f7f7f8;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
 }
 
-/* ========== 输入区 ========== */
+.assistant-message .message-content {
+    padding: 2px 0;
+}
+
+/* Chat input */
+[data-testid="stBottom"],
+[data-testid="stBottomBlockContainer"],
 [data-testid="stChatInput"] {
-    background: #ffffff;
-    border-top: 1px solid #e5e5e5;
-    padding: 12px 20px;
+    background: #ffffff !important;
 }
+
+[data-testid="stBottomBlockContainer"] {
+    padding: 0 !important;
+}
+
+[data-testid="stChatInput"] {
+    padding: 18px 20px 22px !important;
+    border-top: 1px solid #f0f0f0 !important;
+}
+
+[data-testid="stChatInput"] > div,
+[data-testid="stChatInput"] div {
+    background-color: #ffffff !important;
+}
+
+[data-testid="stChatInput"] > div {
+    width: min(100%, 820px) !important;
+    margin: 0 auto !important;
+    background: #ffffff !important;
+    border: 2px solid #111111 !important;
+    border-radius: 20px !important;
+    box-shadow: 0 14px 42px rgba(0, 0, 0, 0.16) !important;
+    padding: 8px 10px !important;
+}
+
 [data-testid="stChatInput"] textarea {
-    border-radius: 12px !important;
-    border: 1px solid #d1d5db !important;
-    padding: 10px 16px !important;
-    font-size: 15px !important;
-    min-height: 44px !important;
-}
-[data-testid="stChatInput"] textarea:focus {
-    border-color: #2563eb !important;
-    box-shadow: 0 0 0 2px rgba(37,99,235,0.1) !important;
-}
-
-/* ========== 隐藏不需要的元素 ========== */
-#MainMenu, footer, header {
-    visibility: hidden;
-}
-[data-testid="stSidebarNav"] {
-    display: none;
-}
-[data-testid="stDecoration"] {
-    display: none;
-}
-[data-testid="stStatusWidget"] {
-    display: none;
-}
-
-/* 隐藏顶栏 */
-.stApp header {
+    color: var(--text) !important;
     background: transparent !important;
-}
-.stAppToolbar {
-    display: none !important;
+    border: none !important;
+    font-size: 15px !important;
+    line-height: 1.5 !important;
 }
 
-/* Spinner 样式优化 */
+[data-testid="stChatInput"] textarea::placeholder {
+    color: #8e8ea0 !important;
+}
+
+[data-testid="stChatInput"] button {
+    background-color: #111111 !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="stChatInput"] button:hover {
+    background: #000000 !important;
+}
+
 .stSpinner {
-    text-align: center;
-    padding: 20px;
-    color: #8e8ea0;
+    width: min(100%, 820px) !important;
+    margin: 0 auto !important;
+    padding: 0 20px !important;
+}
+
+@media (max-width: 760px) {
+    .chat-content {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .prompt-grid {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
 """

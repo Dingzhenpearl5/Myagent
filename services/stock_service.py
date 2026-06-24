@@ -1,10 +1,73 @@
 import akshare as ak
+import pandas as pd
+import time
+
+# 内存缓存，60 秒内重复查询不重新拉取全市场数据
+_STOCK_CACHE = {"df": None, "timestamp": 0, "expires": 60}
+
+
+def _normalize_code(raw_code: str) -> str:
+    """去掉股票代码中的交易所前缀（sh/sz/bj），保留 6 位数字。"""
+    if isinstance(raw_code, str):
+        return raw_code.strip().lower().replace("sh", "").replace("sz", "").replace("bj", "")
+    return str(raw_code)
+
+
+def _get_all_stocks() -> pd.DataFrame:
+    """获取全市场 A 股数据，带 60 秒缓存。
+
+    优先使用 stock_zh_a_spot_em，失败时降级到 stock_zh_a_spot。
+    """
+    now = time.time()
+    if _STOCK_CACHE["df"] is not None and now - _STOCK_CACHE["timestamp"] < _STOCK_CACHE["expires"]:
+        return _STOCK_CACHE["df"]
+
+    try:
+        df = ak.stock_zh_a_spot_em()
+        _STOCK_CACHE["df"] = df
+        _STOCK_CACHE["timestamp"] = now
+        return df
+    except Exception:
+        pass
+
+    try:
+        df = ak.stock_zh_a_spot()
+        _STOCK_CACHE["df"] = df
+        _STOCK_CACHE["timestamp"] = now
+        return df
+    except Exception as e:
+        raise Exception(f"无法获取股票数据: {str(e)}")
+
+
+def _search_in_dataframe(df: pd.DataFrame, keyword: str) -> dict | None:
+    """在 DataFrame 中按代码或名称搜索股票。"""
+    if df is None or df.empty:
+        return None
+
+    df = df.copy()
+    df["代码_标准"] = df["代码"].apply(_normalize_code)
+    keyword_norm = _normalize_code(keyword)
+
+    # 1. 精确匹配代码（兼容 sh/sz/bj 前缀）
+    match = df[df["代码_标准"] == keyword_norm]
+    if not match.empty:
+        return match.iloc[0].to_dict()
+
+    # 2. 精确匹配名称
+    match = df[df["名称"] == keyword]
+    if not match.empty:
+        return match.iloc[0].to_dict()
+
+    # 3. 模糊匹配名称
+    match = df[df["名称"].str.contains(keyword, na=False)]
+    if not match.empty:
+        return match.iloc[0].to_dict()
+
+    return None
 
 
 def search_stock(keyword: str) -> dict | None:
     """在 A 股市场中搜索股票。
-
-    匹配优先级：代码精确匹配 > 名称精确匹配 > 名称模糊匹配。
 
     Args:
         keyword: 股票名称或6位代码，如"平安银行"、"000001"、"茅台"
@@ -12,27 +75,8 @@ def search_stock(keyword: str) -> dict | None:
     Returns:
         匹配到的股票信息字典，未找到则返回 None
     """
-    try:
-        df = ak.stock_zh_a_spot_em()
-
-        # 1. 精确匹配代码
-        match = df[df["代码"] == keyword]
-        if not match.empty:
-            return match.iloc[0].to_dict()
-
-        # 2. 精确匹配名称
-        match = df[df["名称"] == keyword]
-        if not match.empty:
-            return match.iloc[0].to_dict()
-
-        # 3. 模糊匹配名称
-        match = df[df["名称"].str.contains(keyword, na=False)]
-        if not match.empty:
-            return match.iloc[0].to_dict()
-
-        return None
-    except Exception:
-        return None
+    df = _get_all_stocks()
+    return _search_in_dataframe(df, keyword)
 
 
 def format_stock(info: dict) -> str:

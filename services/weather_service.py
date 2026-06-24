@@ -1,19 +1,34 @@
 import requests
 from config.settings import AMAP_API_KEY
 
+# 常见城市 adcode 本地兜底映射（高德 Web 服务 Key 受限时可用）
+CITY_ADCODE_MAP = {
+    "北京": "110000", "北京市": "110000",
+    "上海": "310000", "上海市": "310000",
+    "广州": "440100", "广州市": "440100",
+    "深圳": "440300", "深圳市": "440300",
+    "杭州": "330100", "杭州市": "330100",
+    "南京": "320100", "南京市": "320100",
+    "成都": "510100", "成都市": "510100",
+    "武汉": "420100", "武汉市": "420100",
+    "西安": "610100", "西安市": "610100",
+    "重庆": "500000", "重庆市": "500000",
+    "天津": "120000", "天津市": "120000",
+    "苏州": "320500", "苏州市": "320500",
+    "郑州": "410100", "郑州市": "410100",
+    "长沙": "430100", "长沙市": "430100",
+    "青岛": "370200", "青岛市": "370200",
+    "宁波": "330200", "宁波市": "330200",
+    "厦门": "350200", "厦门市": "350200",
+}
+
 
 def city_to_adcode(city: str) -> str:
-    """将城市中文名转换为高德 adcode。
+    """将城市中文名转换为高德 adcode。"""
+    # 优先本地兜底，避免高德地理编码 API Key 权限问题
+    if city in CITY_ADCODE_MAP:
+        return CITY_ADCODE_MAP[city]
 
-    Args:
-        city: 城市中文名称，如"北京"
-
-    Returns:
-        adcode 字符串，如 "110000"
-
-    Raises:
-        ValueError: 城市名无法识别时抛出
-    """
     url = "https://restapi.amap.com/v3/geocode/geo"
     params = {
         "key": AMAP_API_KEY,
@@ -28,7 +43,15 @@ def city_to_adcode(city: str) -> str:
         if data.get("status") == "1" and data.get("geocodes"):
             return data["geocodes"][0]["adcode"]
 
-        raise ValueError(f"无法识别城市: {city}，请输入准确的城市名称")
+        # 返回高德真实错误信息，便于排查
+        error_info = data.get("info", "未知错误")
+        infocode = data.get("infocode", "")
+        if infocode == "10009":
+            raise ValueError(
+                "高德 API Key 平台不匹配（USERKEY_PLAT_NOMATCH）。"
+                "请前往 https://console.amap.com 为该 Key 添加「Web服务API」权限。"
+            )
+        raise ValueError(f"无法识别城市: {city}（高德返回：{error_info}）")
     except requests.Timeout:
         raise Exception("查询超时，请稍后重试")
     except requests.RequestException as e:
@@ -61,7 +84,14 @@ def get_realtime_weather(adcode: str) -> dict:
         if data.get("status") == "1" and data.get("lives"):
             return data["lives"][0]
 
-        raise Exception(f"获取天气失败: {data.get('info', '未知错误')}")
+        error_info = data.get("info", "未知错误")
+        infocode = data.get("infocode", "")
+        if infocode == "10009":
+            raise Exception(
+                "高德 API Key 平台不匹配（USERKEY_PLAT_NOMATCH）。"
+                "请前往 https://console.amap.com 为该 Key 添加「Web服务API」权限。"
+            )
+        raise Exception(f"获取天气失败: {error_info}")
     except requests.Timeout:
         raise Exception("查询超时，请稍后重试")
     except requests.RequestException as e:

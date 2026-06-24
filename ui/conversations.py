@@ -56,56 +56,49 @@ def render_conversations() -> None:
         _new_conversation()
 
     # --- 顶部：新建对话按钮 ---
-    with st.sidebar.container():
-        if st.sidebar.button("+ 新建对话", use_container_width=True):
-            _new_conversation()
-            st.rerun()
+    st.sidebar.markdown(
+        '<div class="sidebar-title">企业综合信息助手</div>',
+        unsafe_allow_html=True,
+    )
+    if st.sidebar.button("＋ 新建对话", use_container_width=True):
+        _new_conversation()
+        st.rerun()
 
-    st.sidebar.divider()
+    st.sidebar.markdown(
+        '<div class="history-title">历史记录</div>',
+        unsafe_allow_html=True,
+    )
 
     # --- 中间：对话列表 ---
     conversations = st.session_state.conversations
     active_id = st.session_state.active_conversation_id
 
-    # 使用自定义 HTML 渲染对话列表（支持高亮和省略号）
-    items_html = ""
-    for i, conv in enumerate(conversations):
+    # 使用按钮渲染对话列表，每个按钮可点击切换
+    for conv in conversations:
         is_active = conv["id"] == active_id
-        css_class = "conv-item active" if is_active else "conv-item"
         title = conv["title"] or "新对话"
-        # 给每个对话一个可点击的标记
-        items_html += f"""<div class="{css_class}" id="conv-{i}">💬 {title}</div>"""
-
-    st.sidebar.markdown(items_html, unsafe_allow_html=True)
-
-    # 用 selectbox（隐形）实现点击切换
-    # Streamlit 没有直接的点击事件，用 radio/selectbox 模拟
-    if len(conversations) > 1:
-        titles = [c["title"] or f"对话 {i+1}" for i, c in enumerate(conversations)]
-        selected = st.sidebar.radio(
-            "对话列表",
-            options=list(range(len(conversations))),
-            format_func=lambda i: titles[i],
-            index=_get_active_index() or 0,
-            key="conv_radio",
-            label_visibility="collapsed",
-        )
-        if conversations[selected]["id"] != active_id:
-            _set_active(conversations[selected]["id"])
+        display_title = title[:20] + "…" if len(title) > 20 else title
+        if st.sidebar.button(
+            display_title,
+            key=f"conv_btn_{conv['id']}",
+            use_container_width=True,
+            disabled=is_active,
+        ):
+            _set_active(conv["id"])
             st.rerun()
 
     # --- 底部：设置（折叠） ---
     st.sidebar.divider()
-    with st.sidebar.expander("⚙️ 设置", expanded=False):
+    with st.sidebar.expander("设置", expanded=False):
         if DEEPSEEK_API_KEY:
-            st.sidebar.success("✅ DeepSeek API Key 已配置")
+            st.sidebar.success("DeepSeek API Key 已配置")
         else:
-            st.sidebar.error("❌ DeepSeek API Key 未配置")
+            st.sidebar.error("DeepSeek API Key 未配置")
 
         if AMAP_API_KEY:
-            st.sidebar.success("✅ 高德 API Key 已配置")
+            st.sidebar.success("高德 API Key 已配置")
         else:
-            st.sidebar.error("❌ 高德 API Key 未配置")
+            st.sidebar.error("高德 API Key 未配置")
 
         st.sidebar.caption("可用工具：天气 / 股票 / 内部资料")
 

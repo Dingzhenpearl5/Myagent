@@ -14,9 +14,8 @@ from ui.chat import render_chat
 # ── 页面配置 ──
 st.set_page_config(
     page_title="企业综合信息查询助手",
-    page_icon="🏢",
     layout="wide",
-    initial_sidebar_state="auto",
+    initial_sidebar_state="expanded",
 )
 
 # ── 注入全局样式 ──
@@ -31,7 +30,7 @@ if "agent" not in st.session_state:
 
 if st.session_state.agent is None:
     if not DEEPSEEK_API_KEY:
-        st.warning("⚠️ 请先在 .env 文件中配置 DEEPSEEK_API_KEY，然后刷新页面。")
+        st.warning("请先在 .env 文件中配置 DEEPSEEK_API_KEY，然后刷新页面。")
         st.stop()
     try:
         with st.spinner("正在初始化 Agent..."):
