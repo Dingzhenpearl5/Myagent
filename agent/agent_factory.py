@@ -15,8 +15,41 @@ from config.settings import (
 from tools.weather_tool import get_weather
 from tools.stock_tool import get_stock
 from tools.rag_tool import query_internal_docs
+from services.rag_service import search_internal_docs
 
 logger = logging.getLogger(__name__)
+
+INTERNAL_DOC_KEYWORDS = (
+    "内部资料",
+    "公司制度",
+    "员工手册",
+    "工作时间",
+    "考勤",
+    "打卡",
+    "补卡",
+    "迟到",
+    "早退",
+    "请假",
+    "年假",
+    "病假",
+    "事假",
+    "报销",
+    "居家办公",
+    "远程办公",
+    "信息安全",
+    "绩效",
+    "晋升",
+    "培训",
+    "离职",
+    "交接",
+)
+
+
+def _is_internal_docs_query(user_input: str) -> bool:
+    """判断是否应直接查询内部资料。"""
+    normalized = (user_input or "").strip().lower()
+    return any(keyword.lower() in normalized for keyword in INTERNAL_DOC_KEYWORDS)
+
 
 # 系统提示词
 SYSTEM_PROMPT = """你是一个企业综合信息查询助手。你可以帮助用户查询以下信息：
@@ -80,6 +113,9 @@ def invoke_agent(agent, user_input: str, history: list[dict]) -> str:
     Returns:
         Agent 的最终文本回答
     """
+    if _is_internal_docs_query(user_input):
+        return search_internal_docs(user_input)
+
     # 把对话历史转换为 LangChain 的消息对象列表
     messages = []
     for msg in history:

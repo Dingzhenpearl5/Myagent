@@ -10,6 +10,10 @@ DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
 # 高德地图 API 配置
 AMAP_API_KEY = os.getenv("AMAP_API_KEY", "")
 
+# TCL 知识库配置
+TCL_TOKEN = os.getenv("TCL_TOKEN", "")
+TCL_KNOWLEDGE_ID = os.getenv("TCL_KNOWLEDGE_ID", "")
+
 # 模型参数
 MODEL_NAME = "deepseek-chat"
 TEMPERATURE = 0

@@ -60,14 +60,26 @@ def _query_terms(query: str) -> list[str]:
     terms = re.findall(r"[\u4e00-\u9fff]{2,}|[a-zA-Z0-9]{2,}", normalized)
     aliases = {
         "请假": ["年假", "病假", "事假", "审批"],
+        "请假制度": ["请假", "年假", "病假", "事假", "审批"],
         "报销": ["费用", "发票", "财务", "差旅"],
+        "报销制度": ["报销", "费用", "发票", "财务", "差旅"],
         "打卡": ["考勤", "补卡", "迟到"],
+        "打卡制度": ["打卡", "考勤", "补卡", "迟到", "早退"],
+        "考勤": ["打卡", "补卡", "迟到", "早退", "出勤"],
+        "考勤制度": ["考勤", "打卡", "补卡", "迟到", "早退", "出勤"],
         "居家": ["远程", "居家办公"],
+        "居家办公": ["居家", "远程", "线上会议"],
+        "内部资料": ["员工手册", "公司制度", "考勤", "请假", "报销", "信息安全"],
+        "员工手册": ["工作时间", "考勤", "请假", "报销", "居家办公", "信息安全", "绩效", "培训", "离职"],
         "ai": ["AI", "信息安全", "敏感"],
     }
     expanded = list(terms)
     for term in terms:
         expanded.extend(aliases.get(term, []))
+    for key, values in aliases.items():
+        if key in normalized:
+            expanded.append(key)
+            expanded.extend(values)
     return list(dict.fromkeys(expanded))
 
 
@@ -85,6 +97,29 @@ def _shorten(text: str) -> str:
     return clean[:MAX_SNIPPET_LENGTH].rstrip() + "…"
 
 
+def _is_scope_query(query: str) -> bool:
+    """判断用户是否在询问内部资料范围。"""
+    return any(
+        phrase in query
+        for phrase in ("可以查什么", "能查什么", "有什么内部资料", "内部资料有哪些", "文档库有什么")
+    )
+
+
+def _format_available_scope(docs: list[dict]) -> str:
+    """返回当前本地知识库可查询范围。"""
+    lines = ["已查阅内部资料，当前本地知识库可查询以下资料："]
+    for doc in docs:
+        headings = [
+            line.lstrip("#").strip()
+            for line in doc["text"].splitlines()
+            if line.startswith("## ")
+        ]
+        lines.append(f"\n- 来源：{doc['source']}")
+        if headings:
+            lines.append("  可查章节：" + "、".join(headings[:12]))
+    return "\n".join(lines)
+
+
 def search_internal_docs(query: str) -> str:
     """搜索内部文档知识库。"""
     normalized_query = (query or "").strip()
@@ -94,6 +129,9 @@ def search_internal_docs(query: str) -> str:
     docs = _load_documents()
     if not docs:
         return "未找到可查阅的内部资料。请先将 .md 或 .txt 文档放入 data/internal_docs/。"
+
+    if _is_scope_query(normalized_query):
+        return _format_available_scope(docs)
 
     terms = _query_terms(normalized_query)
     scored_chunks = []

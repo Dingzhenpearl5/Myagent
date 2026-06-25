@@ -10,6 +10,22 @@ def test_search_internal_docs_from_employee_handbook():
     assert "5 个工作日" in result or "报销" in result
 
 
+def test_search_internal_docs_attendance_policy():
+    result = search_internal_docs("打卡制度")
+
+    assert "已查阅内部资料" in result
+    assert "员工手册.md" in result
+    assert "考勤" in result or "补卡" in result
+
+
+def test_search_internal_docs_available_scope():
+    result = search_internal_docs("你可以查什么内部资料呢")
+
+    assert "已查阅内部资料" in result
+    assert "员工手册.md" in result
+    assert "请假" in result or "报销" in result or "信息安全" in result
+
+
 def test_search_internal_docs_no_match():
     result = search_internal_docs("火星基地停车规则")
 

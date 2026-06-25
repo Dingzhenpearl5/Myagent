@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env，填入 DEEPSEEK_API_KEY 和 AMAP_API_KEY
+# 编辑 .env，填入 DEEPSEEK_API_KEY、AMAP_API_KEY
 
 # 启动
 streamlit run app.py

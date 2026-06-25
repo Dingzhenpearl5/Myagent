@@ -111,7 +111,7 @@ def format_stock(info: dict) -> str:
         f"昨收价: {info.get('昨收', '未知')} 元\n"
         f"最高价: {info.get('最高', '未知')} 元\n"
         f"最低价: {info.get('最低', '未知')} 元\n"
-        f"\n⚠️ 以上信息仅供参考，不构成投资建议。"
+        f"\n风险提示：以上信息仅供参考，不构成投资建议。"
     )
     return result
 

@@ -43,6 +43,17 @@ def test_invoke_agent_converts_history_messages():
     assert messages[2].content == "那上海呢？"
 
 
+def test_invoke_agent_internal_docs_bypasses_llm():
+    """内部资料问题直接查询本地知识库，不让 LLM 改写工具结果。"""
+    agent = Mock()
+
+    answer = invoke_agent(agent=agent, user_input="怎么打卡", history=[])
+
+    assert "已查阅内部资料" in answer
+    assert "员工手册.md" in answer
+    assert "考勤" in answer or "补卡" in answer
+    agent.invoke.assert_not_called()
+
 def test_agent_weather_intent():
     """测试 Agent 天气意图识别。
 
