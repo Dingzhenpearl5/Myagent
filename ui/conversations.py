@@ -3,6 +3,7 @@
 import streamlit as st
 import uuid
 from config.settings import DEEPSEEK_API_KEY, AMAP_API_KEY
+from ui.conversation_store import load_conversations, save_conversations
 
 
 def _get_active_index() -> int | None:
@@ -38,6 +39,7 @@ def _new_conversation() -> None:
         {"id": new_id, "title": "新对话", "messages": []},
     )
     st.session_state.active_conversation_id = new_id
+    save_conversations(st.session_state.conversations)
 
 
 def render_conversations() -> None:
@@ -47,9 +49,16 @@ def render_conversations() -> None:
     """
     # --- 初始化 session_state ---
     if "conversations" not in st.session_state:
-        st.session_state.conversations = []
+        st.session_state.conversations = load_conversations()
     if "active_conversation_id" not in st.session_state:
         st.session_state.active_conversation_id = None
+
+    active_id = st.session_state.active_conversation_id
+    existing_ids = {conv["id"] for conv in st.session_state.conversations}
+    if active_id not in existing_ids:
+        st.session_state.active_conversation_id = (
+            st.session_state.conversations[0]["id"] if st.session_state.conversations else None
+        )
 
     # 如果没有任何对话，自动创建一个
     if not st.session_state.conversations:
@@ -74,6 +83,9 @@ def render_conversations() -> None:
     active_id = st.session_state.active_conversation_id
 
     # 使用按钮渲染对话列表，每个按钮可点击切换
+    if not conversations:
+        st.sidebar.caption("暂无历史记录")
+
     for conv in conversations:
         is_active = conv["id"] == active_id
         title = conv["title"] or "新对话"
@@ -136,3 +148,5 @@ def append_message(role: str, content: str) -> None:
         if len(title) > 20:
             title = title[:20] + "…"
         conv["title"] = title
+
+    save_conversations(st.session_state.conversations)
