@@ -29,23 +29,54 @@ CUSTOM_CSS = """
 .main .block-container {
     max-width: 100% !important;
     padding: 0 !important;
+    margin-top: 0 !important;
 }
 
 #MainMenu,
 footer,
-.stAppToolbar,
 [data-testid="stDecoration"] {
     display: none !important;
 }
 
 header[data-testid="stHeader"] {
     background: transparent !important;
-    height: 0 !important;
+    height: 42px !important;
+    pointer-events: auto !important;
+    z-index: 9998 !important;
 }
 
-[data-testid="stSidebarCollapseButton"] {
-    display: block !important;
+[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"],
+button[aria-label="Close sidebar"],
+button[aria-label="Open sidebar"],
+button[aria-label="Collapse sidebar"],
+button[aria-label="Expand sidebar"],
+button[aria-label="Hide sidebar"],
+button[aria-label="Show sidebar"],
+button[title="Close sidebar"],
+button[title="Open sidebar"],
+button[title="Collapse sidebar"],
+button[title="Expand sidebar"],
+button[title="Hide sidebar"],
+button[title="Show sidebar"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
+
+.stApp::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 252px;
+    width: 56px;
+    height: 56px;
+    background: var(--sidebar);
+    z-index: 2147483647;
+    pointer-events: auto;
+}
+
 
 /* Sidebar */
 [data-testid="stSidebar"],
