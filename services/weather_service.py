@@ -1,5 +1,10 @@
+import logging
+import time
+
 import requests
 from config.settings import AMAP_API_KEY
+
+logger = logging.getLogger(__name__)
 
 # 常见城市 adcode 本地兜底映射（高德 Web 服务 Key 受限时可用）
 CITY_ADCODE_MAP = {
@@ -37,15 +42,19 @@ def city_to_adcode(city: str) -> str:
     }
 
     try:
+        started_at = time.perf_counter()
         resp = requests.get(url, params=params, timeout=10)
+        elapsed_ms = (time.perf_counter() - started_at) * 1000
         data = resp.json()
 
         if data.get("status") == "1" and data.get("geocodes"):
+            logger.info("amap.geocode success elapsed_ms=%.0f", elapsed_ms)
             return data["geocodes"][0]["adcode"]
 
         # 返回高德真实错误信息，便于排查
         error_info = data.get("info", "未知错误")
         infocode = data.get("infocode", "")
+        logger.warning("amap.geocode failed infocode=%s info=%s elapsed_ms=%.0f", infocode, error_info, elapsed_ms)
         if infocode == "10009":
             raise ValueError(
                 "高德 API Key 平台不匹配（USERKEY_PLAT_NOMATCH）。"
@@ -53,8 +62,10 @@ def city_to_adcode(city: str) -> str:
             )
         raise ValueError(f"无法识别城市: {city}（高德返回：{error_info}）")
     except requests.Timeout:
+        logger.warning("amap.geocode timeout")
         raise Exception("查询超时，请稍后重试")
     except requests.RequestException as e:
+        logger.warning("amap.geocode request failed error=%s", type(e).__name__)
         raise Exception(f"网络请求失败: {str(e)}")
 
 
@@ -78,14 +89,18 @@ def get_realtime_weather(adcode: str) -> dict:
     }
 
     try:
+        started_at = time.perf_counter()
         resp = requests.get(url, params=params, timeout=10)
+        elapsed_ms = (time.perf_counter() - started_at) * 1000
         data = resp.json()
 
         if data.get("status") == "1" and data.get("lives"):
+            logger.info("amap.weather success elapsed_ms=%.0f", elapsed_ms)
             return data["lives"][0]
 
         error_info = data.get("info", "未知错误")
         infocode = data.get("infocode", "")
+        logger.warning("amap.weather failed infocode=%s info=%s elapsed_ms=%.0f", infocode, error_info, elapsed_ms)
         if infocode == "10009":
             raise Exception(
                 "高德 API Key 平台不匹配（USERKEY_PLAT_NOMATCH）。"
@@ -93,8 +108,10 @@ def get_realtime_weather(adcode: str) -> dict:
             )
         raise Exception(f"获取天气失败: {error_info}")
     except requests.Timeout:
+        logger.warning("amap.weather timeout")
         raise Exception("查询超时，请稍后重试")
     except requests.RequestException as e:
+        logger.warning("amap.weather request failed error=%s", type(e).__name__)
         raise Exception(f"网络请求失败: {str(e)}")
 
 

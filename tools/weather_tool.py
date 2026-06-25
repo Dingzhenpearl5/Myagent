@@ -1,5 +1,9 @@
+import logging
+
 from langchain.tools import tool
 from services.weather_service import query_weather
+
+logger = logging.getLogger(__name__)
 
 
 @tool
@@ -15,4 +19,12 @@ def get_weather(city: str) -> str:
     Returns:
         格式化的天气信息字符串，包含温度、天气状况、湿度、风力等
     """
-    return query_weather(city)
+    normalized_city = (city or "").strip()
+    if not normalized_city:
+        return "请提供要查询天气的城市名称，例如：北京、上海、深圳。"
+
+    try:
+        return query_weather(normalized_city)
+    except Exception:
+        logger.exception("weather tool failed city_len=%s", len(normalized_city))
+        return "天气查询工具暂时不可用，请稍后重试或检查城市名称是否正确。"

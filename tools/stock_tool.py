@@ -1,5 +1,9 @@
+import logging
+
 from langchain.tools import tool
 from services.stock_service import query_stock
+
+logger = logging.getLogger(__name__)
 
 
 @tool
@@ -16,4 +20,12 @@ def get_stock(stock_query: str) -> str:
         格式化的股票行情信息字符串，包含最新价、涨跌幅、成交量等，
         末尾自动附带风险提示。
     """
-    return query_stock(stock_query)
+    normalized_query = (stock_query or "").strip()
+    if not normalized_query:
+        return "请提供要查询的 A 股股票名称或 6 位代码，例如：平安银行、000001。"
+
+    try:
+        return query_stock(normalized_query)
+    except Exception:
+        logger.exception("stock tool failed query_len=%s", len(normalized_query))
+        return "股票查询工具暂时不可用，请稍后重试或检查股票名称/代码是否正确。"

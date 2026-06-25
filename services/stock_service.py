@@ -1,6 +1,10 @@
+import logging
+import time
+
 import akshare as ak
 import pandas as pd
-import time
+
+logger = logging.getLogger(__name__)
 
 # 内存缓存，60 秒内重复查询不重新拉取全市场数据
 _STOCK_CACHE = {"df": None, "timestamp": 0, "expires": 60}
@@ -20,22 +24,30 @@ def _get_all_stocks() -> pd.DataFrame:
     """
     now = time.time()
     if _STOCK_CACHE["df"] is not None and now - _STOCK_CACHE["timestamp"] < _STOCK_CACHE["expires"]:
+        logger.info("stock.cache hit")
         return _STOCK_CACHE["df"]
 
     try:
+        started_at = time.perf_counter()
         df = ak.stock_zh_a_spot_em()
+        elapsed_ms = (time.perf_counter() - started_at) * 1000
         _STOCK_CACHE["df"] = df
         _STOCK_CACHE["timestamp"] = now
-        return df
-    except Exception:
-        pass
-
-    try:
-        df = ak.stock_zh_a_spot()
-        _STOCK_CACHE["df"] = df
-        _STOCK_CACHE["timestamp"] = now
+        logger.info("stock.fetch primary success rows=%s elapsed_ms=%.0f", len(df), elapsed_ms)
         return df
     except Exception as e:
+        logger.warning("stock.fetch primary failed error=%s", type(e).__name__)
+
+    try:
+        started_at = time.perf_counter()
+        df = ak.stock_zh_a_spot()
+        elapsed_ms = (time.perf_counter() - started_at) * 1000
+        _STOCK_CACHE["df"] = df
+        _STOCK_CACHE["timestamp"] = now
+        logger.info("stock.fetch fallback success rows=%s elapsed_ms=%.0f", len(df), elapsed_ms)
+        return df
+    except Exception as e:
+        logger.exception("stock.fetch fallback failed")
         raise Exception(f"无法获取股票数据: {str(e)}")
 
 

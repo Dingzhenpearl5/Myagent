@@ -1,3 +1,6 @@
+import logging
+import time
+
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import HumanMessage, AIMessage
@@ -12,6 +15,8 @@ from config.settings import (
 from tools.weather_tool import get_weather
 from tools.stock_tool import get_stock
 from tools.rag_tool import query_internal_docs
+
+logger = logging.getLogger(__name__)
 
 # 系统提示词
 SYSTEM_PROMPT = """你是一个企业综合信息查询助手。你可以帮助用户查询以下信息：
@@ -86,7 +91,15 @@ def invoke_agent(agent, user_input: str, history: list[dict]) -> str:
     messages.append(HumanMessage(content=user_input))
 
     # 调用 Agent
-    result = agent.invoke({"messages": messages})
+    started_at = time.perf_counter()
+    try:
+        result = agent.invoke({"messages": messages})
+        elapsed_ms = (time.perf_counter() - started_at) * 1000
+        logger.info("agent.invoke success messages=%s elapsed_ms=%.0f", len(messages), elapsed_ms)
+    except Exception:
+        elapsed_ms = (time.perf_counter() - started_at) * 1000
+        logger.exception("agent.invoke failed messages=%s elapsed_ms=%.0f", len(messages), elapsed_ms)
+        raise
 
     # 提取最后一条 AI 消息内容
     if "messages" in result and result["messages"]:

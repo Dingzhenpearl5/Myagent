@@ -4,9 +4,9 @@
 可使用 mock 工具来避免实际 API 调用。
 """
 import os
-from unittest.mock import patch
+from unittest.mock import Mock
 
-from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+from langchain_core.messages import HumanMessage, AIMessage
 
 from agent.agent_factory import create_agent, invoke_agent
 
@@ -20,6 +20,27 @@ def test_agent_creation():
     agent = create_agent()
     assert agent is not None
     print("✅ Agent 创建测试通过")
+
+
+def test_invoke_agent_converts_history_messages():
+    """测试 invoke_agent 将历史和当前输入转换为 LangChain 消息。"""
+    agent = Mock()
+    agent.invoke.return_value = {"messages": [AIMessage(content="收到")]}
+    history = [
+        {"role": "user", "content": "北京天气怎么样？"},
+        {"role": "assistant", "content": "北京今天晴。"},
+    ]
+
+    answer = invoke_agent(agent=agent, user_input="那上海呢？", history=history)
+
+    assert answer == "收到"
+    payload = agent.invoke.call_args.args[0]
+    messages = payload["messages"]
+    assert len(messages) == 3
+    assert isinstance(messages[0], HumanMessage)
+    assert isinstance(messages[1], AIMessage)
+    assert isinstance(messages[2], HumanMessage)
+    assert messages[2].content == "那上海呢？"
 
 
 def test_agent_weather_intent():
