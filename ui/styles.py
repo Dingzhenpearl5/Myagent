@@ -9,11 +9,15 @@ CUSTOM_CSS = """
     --border: #e5e5e5;
     --text: #0f0f0f;
     --muted: #6b7280;
-    --sidebar: #171717;
-    --sidebar-hover: #262626;
-    --sidebar-active: #343541;
-    --sidebar-border: #2f2f2f;
-    --accent: #10a37f;
+    --sidebar: #f7f8fa;
+    --sidebar-hover: #eef2ff;
+    --sidebar-active: #ffffff;
+    --sidebar-border: #e5e7eb;
+    --accent: #2563eb;
+}
+
+* {
+    box-sizing: border-box;
 }
 
 .stApp {
@@ -54,7 +58,9 @@ header[data-testid="stHeader"] {
     width: 300px !important;
     min-width: 300px !important;
     max-width: 300px !important;
-    border-right: 1px solid var(--sidebar-border) !important;
+    border-right: 2px solid #d7dce5 !important;
+    box-shadow: 6px 0 18px rgba(15, 23, 42, 0.05) !important;
+    z-index: 20 !important;
 }
 
 [data-testid="stSidebar"] > div:first-child {
@@ -64,24 +70,24 @@ header[data-testid="stHeader"] {
 }
 
 [data-testid="stSidebar"] * {
-    color: #f4f4f5 !important;
+    color: #111827 !important;
 }
 
 .sidebar-title {
-    padding: 10px 4px 16px;
-    font-size: 15px;
-    font-weight: 650;
+    padding: 14px 4px 18px;
+    color: #111827 !important;
+    font-size: 20px;
+    font-weight: 800;
     letter-spacing: 0.01em;
 }
 
 .history-title {
-    margin: 16px 4px 10px;
+    margin: 14px 4px 12px;
     padding-bottom: 10px;
-    border-bottom: 1px solid var(--sidebar-border);
-    color: #a1a1aa !important;
-    font-size: 12px;
-    font-weight: 650;
-    letter-spacing: 0.08em;
+    border-bottom: 2px solid var(--accent);
+    color: var(--accent) !important;
+    font-size: 14px;
+    font-weight: 700;
 }
 
 .sidebar-caption {
@@ -92,29 +98,32 @@ header[data-testid="stHeader"] {
 
 [data-testid="stSidebar"] .stButton > button {
     width: 100% !important;
-    min-height: 42px !important;
+    min-height: 44px !important;
     justify-content: flex-start !important;
     text-align: left !important;
-    background: transparent !important;
-    border: 1px solid transparent !important;
+    background: #ffffff !important;
+    border: 1px solid #edf0f5 !important;
     border-radius: 10px !important;
-    color: #f4f4f5 !important;
-    padding: 9px 12px !important;
+    color: #111827 !important;
+    padding: 10px 12px !important;
     font-size: 14px !important;
-    font-weight: 450 !important;
-    box-shadow: none !important;
-    transition: background 0.15s ease, border-color 0.15s ease !important;
+    font-weight: 500 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
 }
 
 [data-testid="stSidebar"] .stButton > button:hover {
-    background: var(--sidebar-hover) !important;
-    border-color: var(--sidebar-border) !important;
+    background: #ffffff !important;
+    border-color: #93c5fd !important;
+    box-shadow: 0 0 0 1px #93c5fd !important;
 }
 
 [data-testid="stSidebar"] .stButton > button:disabled {
-    background: var(--sidebar-active) !important;
-    border-color: #444654 !important;
+    background: #ffffff !important;
+    border-color: var(--accent) !important;
+    color: #111827 !important;
     opacity: 1 !important;
+    box-shadow: 0 0 0 1px var(--accent) !important;
 }
 
 [data-testid="stSidebar"] hr {
@@ -125,23 +134,24 @@ header[data-testid="stHeader"] {
 [data-testid="stSidebar"] [data-testid="stExpander"] {
     border: 1px solid var(--sidebar-border) !important;
     border-radius: 10px !important;
-    background: #202123 !important;
+    background: #ffffff !important;
 }
 
 [data-testid="stSidebar"] .stAlert {
-    background: #202123 !important;
+    background: #ffffff !important;
     border: 1px solid var(--sidebar-border) !important;
     border-radius: 8px !important;
 }
 
 /* Main chat layout */
 .chat-shell {
-    min-height: 100vh;
-    background: var(--bg);
+    min-height: calc(100vh - 126px);
+    background: #ffffff;
+    padding: 0;
 }
 
 .chat-topbar {
-    height: 48px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -150,7 +160,7 @@ header[data-testid="stHeader"] {
 }
 
 .chat-title {
-    width: min(100%, 820px);
+    width: min(100%, 760px);
     color: var(--text);
     font-size: 16px;
     font-weight: 650;
@@ -160,13 +170,13 @@ header[data-testid="stHeader"] {
 }
 
 .chat-content {
-    width: min(100%, 820px);
+    width: min(100%, 760px);
     margin: 0 auto;
-    padding: 28px 20px 120px;
+    padding: 0 20px 100px;
 }
 
 .empty-state {
-    min-height: calc(100vh - 220px);
+    padding: 0 0 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -174,18 +184,26 @@ header[data-testid="stHeader"] {
     text-align: center;
 }
 
+.chat-shell [data-testid="stMarkdownContainer"] {
+    margin: 0 !important;
+}
+
+.chat-shell [data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+}
+
 .empty-title {
-    font-size: 28px;
+    font-size: 24px;
     line-height: 1.25;
     font-weight: 700;
     color: var(--text);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .empty-subtitle {
     color: var(--muted);
-    font-size: 15px;
-    margin-bottom: 22px;
+    font-size: 14px;
+    margin-bottom: 16px;
 }
 
 .prompt-grid {
@@ -197,8 +215,8 @@ header[data-testid="stHeader"] {
 
 .prompt-card {
     border: 1px solid #eeeeee;
-    border-radius: 12px;
-    padding: 12px 14px;
+    border-radius: 10px;
+    padding: 10px 12px;
     background: #fbfbfb;
     color: #6b7280;
     text-align: left;
@@ -252,23 +270,23 @@ header[data-testid="stHeader"] {
 }
 
 [data-testid="stChatInput"] {
-    padding: 18px 20px 22px !important;
-    border-top: 1px solid #f0f0f0 !important;
+    padding: 14px 20px 18px !important;
+    border-top: none !important;
 }
 
-[data-testid="stChatInput"] > div,
-[data-testid="stChatInput"] div {
+[data-testid="stChatInput"] > div {
     background-color: #ffffff !important;
 }
 
 [data-testid="stChatInput"] > div {
-    width: min(100%, 820px) !important;
+    width: min(100%, 760px) !important;
+    min-height: 74px !important;
     margin: 0 auto !important;
     background: #ffffff !important;
-    border: 2px solid #111111 !important;
-    border-radius: 20px !important;
-    box-shadow: 0 14px 42px rgba(0, 0, 0, 0.16) !important;
-    padding: 8px 10px !important;
+    border: 1px solid #dfe3ea !important;
+    border-radius: 18px !important;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.12) !important;
+    padding: 14px 16px !important;
 }
 
 [data-testid="stChatInput"] textarea {
@@ -294,7 +312,7 @@ header[data-testid="stHeader"] {
 }
 
 .stSpinner {
-    width: min(100%, 820px) !important;
+    width: min(100%, 760px) !important;
     margin: 0 auto !important;
     padding: 0 20px !important;
 }

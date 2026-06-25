@@ -57,10 +57,10 @@ def render_conversations() -> None:
 
     # --- 顶部：新建对话按钮 ---
     st.sidebar.markdown(
-        '<div class="sidebar-title">企业综合信息助手</div>',
+        '<div class="sidebar-title">AI 助手</div>',
         unsafe_allow_html=True,
     )
-    if st.sidebar.button("＋ 新建对话", use_container_width=True):
+    if st.sidebar.button("新建聊天", use_container_width=True):
         _new_conversation()
         st.rerun()
 

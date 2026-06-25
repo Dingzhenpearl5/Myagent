@@ -1,6 +1,6 @@
 """
 企业综合信息查询 Agent — Streamlit 入口
-布局：左侧对话列表（深色） + 右侧聊天区（浅色）
+布局：左侧固定聊天历史 + 右侧当前对话
 """
 
 import streamlit as st
