@@ -42,6 +42,33 @@ def _new_conversation() -> None:
     save_conversations(st.session_state.conversations)
 
 
+def _build_history_entries(conversations: list[dict]) -> list[dict]:
+    """按用户提问构建侧栏历史记录。"""
+    entries = []
+    for conv in conversations:
+        user_messages = [msg for msg in conv.get("messages", []) if msg.get("role") == "user"]
+        if not user_messages:
+            entries.append(
+                {
+                    "conversation_id": conv["id"],
+                    "title": conv.get("title") or "新对话",
+                    "message_index": 0,
+                }
+            )
+            continue
+
+        for message_index, message in enumerate(user_messages, start=1):
+            content = (message.get("content") or "").strip()
+            entries.append(
+                {
+                    "conversation_id": conv["id"],
+                    "title": content or conv.get("title") or "新对话",
+                    "message_index": message_index,
+                }
+            )
+    return entries
+
+
 def render_conversations() -> None:
     """渲染侧边栏：新建对话按钮 + 对话列表 + 底部设置。
 
@@ -82,21 +109,22 @@ def render_conversations() -> None:
     conversations = st.session_state.conversations
     active_id = st.session_state.active_conversation_id
 
-    # 使用按钮渲染对话列表，每个按钮可点击切换
-    if not conversations:
+    # 使用按钮渲染历史记录，每条用户提问可点击切换回所属对话
+    history_entries = _build_history_entries(conversations)
+    if not history_entries:
         st.sidebar.caption("暂无历史记录")
 
-    for conv in conversations:
-        is_active = conv["id"] == active_id
-        title = conv["title"] or "新对话"
+    for entry in history_entries:
+        is_active = entry["conversation_id"] == active_id
+        title = entry["title"] or "新对话"
         display_title = title[:20] + "…" if len(title) > 20 else title
         if st.sidebar.button(
             display_title,
-            key=f"conv_btn_{conv['id']}",
+            key=f"history_btn_{entry['conversation_id']}_{entry['message_index']}",
             use_container_width=True,
-            disabled=is_active,
+            disabled=is_active and entry["message_index"] == 0,
         ):
-            _set_active(conv["id"])
+            _set_active(entry["conversation_id"])
             st.rerun()
 
     # --- 底部：设置（折叠） ---

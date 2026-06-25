@@ -43,9 +43,8 @@ header[data-testid="stHeader"] {
     height: 0 !important;
 }
 
-[data-testid="stSidebarCollapseButton"],
-[data-testid="collapsedControl"] {
-    display: none !important;
+[data-testid="stSidebarCollapseButton"] {
+    display: block !important;
 }
 
 /* Sidebar */
@@ -58,6 +57,8 @@ header[data-testid="stHeader"] {
     width: 300px !important;
     min-width: 300px !important;
     max-width: 300px !important;
+    display: block !important;
+    visibility: visible !important;
     border-right: 2px solid #d7dce5 !important;
     box-shadow: 6px 0 18px rgba(15, 23, 42, 0.05) !important;
     z-index: 20 !important;

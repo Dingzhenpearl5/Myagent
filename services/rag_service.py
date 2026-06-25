@@ -1,17 +1,114 @@
-# 内部资料 RAG 服务 — 扩展阶段填充实现
-# 当前为空实现，供后续 RAG 知识库扩展使用
+"""内部资料本地检索服务。"""
 
-"""
-扩展阶段实现内容：
+import logging
+import re
+from pathlib import Path
 
-1. 文档加载：PyMuPDF (PDF) + python-docx (Word)
-2. 文本分块：RecursiveCharacterTextSplitter
-3. Embedding：BGE 中文向量模型 / 通义千问 Embedding / 智谱 Embedding
-4. 向量存储：Chroma（推荐）或 FAISS
-5. 检索召回：similarity_search(k=3)
-"""
+logger = logging.getLogger(__name__)
+
+DOCS_DIR = Path(__file__).resolve().parents[1] / "data" / "internal_docs"
+SUPPORTED_SUFFIXES = {".md", ".txt"}
+MAX_RESULTS = 3
+MAX_SNIPPET_LENGTH = 360
+
+
+def _load_documents() -> list[dict]:
+    """读取本地内部资料文档。"""
+    if not DOCS_DIR.exists():
+        return []
+
+    docs = []
+    for path in DOCS_DIR.rglob("*"):
+        if not path.is_file() or path.suffix.lower() not in SUPPORTED_SUFFIXES:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8").strip()
+        except UnicodeDecodeError:
+            text = path.read_text(encoding="utf-8-sig", errors="ignore").strip()
+        except OSError:
+            logger.exception("internal doc read failed path=%s", path.name)
+            continue
+        if text:
+            docs.append({"source": path.name, "text": text})
+    return docs
+
+
+def _split_chunks(text: str) -> list[str]:
+    """按标题和空行切分文档片段。"""
+    chunks = []
+    current = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            if current:
+                chunks.append("\n".join(current).strip())
+                current = []
+            continue
+        if stripped.startswith("#") and current:
+            chunks.append("\n".join(current).strip())
+            current = [stripped]
+        else:
+            current.append(stripped)
+    if current:
+        chunks.append("\n".join(current).strip())
+    return [chunk for chunk in chunks if chunk]
+
+
+def _query_terms(query: str) -> list[str]:
+    """提取中英文关键词。"""
+    normalized = query.strip().lower()
+    terms = re.findall(r"[\u4e00-\u9fff]{2,}|[a-zA-Z0-9]{2,}", normalized)
+    aliases = {
+        "请假": ["年假", "病假", "事假", "审批"],
+        "报销": ["费用", "发票", "财务", "差旅"],
+        "打卡": ["考勤", "补卡", "迟到"],
+        "居家": ["远程", "居家办公"],
+        "ai": ["AI", "信息安全", "敏感"],
+    }
+    expanded = list(terms)
+    for term in terms:
+        expanded.extend(aliases.get(term, []))
+    return list(dict.fromkeys(expanded))
+
+
+def _score_chunk(chunk: str, terms: list[str]) -> int:
+    """按关键词命中次数计算简单相关性分数。"""
+    chunk_lower = chunk.lower()
+    return sum(chunk_lower.count(term.lower()) for term in terms)
+
+
+def _shorten(text: str) -> str:
+    """限制返回片段长度。"""
+    clean = re.sub(r"\n{3,}", "\n\n", text).strip()
+    if len(clean) <= MAX_SNIPPET_LENGTH:
+        return clean
+    return clean[:MAX_SNIPPET_LENGTH].rstrip() + "…"
 
 
 def search_internal_docs(query: str) -> str:
-    """搜索内部文档知识库（当前为空实现）。"""
-    return "当前版本暂未接入内部资料查询功能，后续可通过 RAG 知识库实现。"
+    """搜索内部文档知识库。"""
+    normalized_query = (query or "").strip()
+    if not normalized_query:
+        return "请提供要查阅的内部资料问题，例如：请假流程、报销标准、信息安全要求。"
+
+    docs = _load_documents()
+    if not docs:
+        return "未找到可查阅的内部资料。请先将 .md 或 .txt 文档放入 data/internal_docs/。"
+
+    terms = _query_terms(normalized_query)
+    scored_chunks = []
+    for doc in docs:
+        for chunk in _split_chunks(doc["text"]):
+            score = _score_chunk(chunk, terms)
+            if score > 0:
+                scored_chunks.append((score, doc["source"], chunk))
+
+    if not scored_chunks:
+        return f"已查阅内部资料，但未找到与「{normalized_query}」直接相关的内容。"
+
+    scored_chunks.sort(key=lambda item: item[0], reverse=True)
+    results = scored_chunks[:MAX_RESULTS]
+    lines = ["已查阅内部资料，找到以下相关内容："]
+    for index, (_, source, chunk) in enumerate(results, start=1):
+        lines.append(f"\n{index}. 来源：{source}\n{_shorten(chunk)}")
+    return "\n".join(lines)
