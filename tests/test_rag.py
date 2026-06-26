@@ -1,5 +1,18 @@
-from services.rag_service import search_internal_docs
+from pathlib import Path
+
+from services.rag_service import SUPPORTED_SUFFIXES, _read_document_text, search_internal_docs
 from tools.rag_tool import query_internal_docs
+
+
+def test_supported_internal_doc_formats():
+    assert {".md", ".txt", ".pdf", ".docx"}.issubset(SUPPORTED_SUFFIXES)
+
+
+def test_read_plain_text_internal_doc(tmp_path):
+    doc_path = tmp_path / "制度.txt"
+    doc_path.write_text("测试制度内容", encoding="utf-8")
+
+    assert _read_document_text(Path(doc_path)) == "测试制度内容"
 
 
 def test_search_internal_docs_from_employee_handbook():

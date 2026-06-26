@@ -2,14 +2,61 @@
 
 import logging
 import re
+from importlib import import_module
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 DOCS_DIR = Path(__file__).resolve().parents[1] / "data" / "internal_docs"
-SUPPORTED_SUFFIXES = {".md", ".txt"}
+SUPPORTED_SUFFIXES = {".md", ".txt", ".pdf", ".docx"}
 MAX_RESULTS = 3
 MAX_SNIPPET_LENGTH = 360
+
+
+def _read_text_file(path: Path) -> str:
+    """读取纯文本资料。"""
+    try:
+        return path.read_text(encoding="utf-8").strip()
+    except UnicodeDecodeError:
+        return path.read_text(encoding="utf-8-sig", errors="ignore").strip()
+
+
+def _read_pdf_file(path: Path) -> str:
+    """读取 PDF 资料。"""
+    try:
+        PdfReader = import_module("pypdf").PdfReader
+    except ImportError:
+        logger.warning("pypdf not installed, skip pdf path=%s", path.name)
+        return ""
+
+    reader = PdfReader(str(path))
+    pages = [page.extract_text() or "" for page in reader.pages]
+    return "\n\n".join(page.strip() for page in pages if page.strip())
+
+
+def _read_docx_file(path: Path) -> str:
+    """读取 Word 资料。"""
+    try:
+        Document = import_module("docx").Document
+    except ImportError:
+        logger.warning("python-docx not installed, skip docx path=%s", path.name)
+        return ""
+
+    document = Document(str(path))
+    paragraphs = [paragraph.text.strip() for paragraph in document.paragraphs]
+    return "\n\n".join(paragraph for paragraph in paragraphs if paragraph)
+
+
+def _read_document_text(path: Path) -> str:
+    """按文件类型读取内部资料。"""
+    suffix = path.suffix.lower()
+    if suffix in {".md", ".txt"}:
+        return _read_text_file(path)
+    if suffix == ".pdf":
+        return _read_pdf_file(path)
+    if suffix == ".docx":
+        return _read_docx_file(path)
+    return ""
 
 
 def _load_documents() -> list[dict]:
@@ -22,9 +69,7 @@ def _load_documents() -> list[dict]:
         if not path.is_file() or path.suffix.lower() not in SUPPORTED_SUFFIXES:
             continue
         try:
-            text = path.read_text(encoding="utf-8").strip()
-        except UnicodeDecodeError:
-            text = path.read_text(encoding="utf-8-sig", errors="ignore").strip()
+            text = _read_document_text(path).strip()
         except OSError:
             logger.exception("internal doc read failed path=%s", path.name)
             continue
@@ -139,7 +184,7 @@ def search_internal_docs(query: str) -> str:
 
     docs = _load_documents()
     if not docs:
-        return "未找到可查阅的内部资料。请先将 .md 或 .txt 文档放入 data/internal_docs/。"
+        return "未找到可查阅的内部资料。请先将 .md、.txt、.pdf 或 .docx 文档放入 data/internal_docs/。"
 
     if _is_scope_query(normalized_query):
         return _format_available_scope(docs)
