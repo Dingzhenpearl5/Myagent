@@ -54,12 +54,12 @@ def _render_empty_state() -> None:
         """
         <div class="empty-state">
             <div class="empty-title">今天想查询什么？</div>
-            <div class="empty-subtitle">可以查询天气、股票，也可以继续普通对话。</div>
+            <div class="empty-subtitle">可以查询内部制度、天气、股票，也可以继续普通对话。</div>
             <div class="prompt-grid">
-                <div class="prompt-card">北京今天的天气怎么样？</div>
+                <div class="prompt-card">怎么打卡？</div>
+                <div class="prompt-card">报销多久到账？</div>
+                <div class="prompt-card">可以使用 AI 工具处理客户资料吗？</div>
                 <div class="prompt-card">查询 000001 当前股价</div>
-                <div class="prompt-card">帮我分析一家企业的信息</div>
-                <div class="prompt-card">总结一下可用工具能力</div>
             </div>
         </div>
         """,
